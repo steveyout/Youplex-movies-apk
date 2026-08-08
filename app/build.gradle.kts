@@ -65,19 +65,17 @@ android {
         }
       }
 
-      if (debugKeystoreFile.exists()) {
-        storeFile = debugKeystoreFile
+      val resolvedDebugStoreFile = when {
+        debugKeystoreFile.exists() -> debugKeystoreFile
+        file("${System.getProperty("user.home")}/.android/debug.keystore").exists() -> file("${System.getProperty("user.home")}/.android/debug.keystore")
+        else -> null
+      }
+
+      if (resolvedDebugStoreFile != null) {
+        storeFile = resolvedDebugStoreFile
         storePassword = "android"
         keyAlias = "androiddebugkey"
         keyPassword = "android"
-      } else {
-        val defaultDebugKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
-        if (defaultDebugKeystore.exists()) {
-          storeFile = defaultDebugKeystore
-          storePassword = "android"
-          keyAlias = "androiddebugkey"
-          keyPassword = "android"
-        }
       }
     }
   }
@@ -89,7 +87,12 @@ android {
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
       signingConfig = signingConfigs.getByName("release")
     }
-    debug { signingConfig = signingConfigs.getByName("debugConfig") }
+    debug {
+      val customDebugConfig = signingConfigs.findByName("debugConfig")
+      if (customDebugConfig?.storeFile != null) {
+        signingConfig = customDebugConfig
+      }
+    }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_11
