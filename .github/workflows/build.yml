@@ -42,19 +42,27 @@ jobs:
 
       - name: 📝 Inject Environment Variables into .env
         env:
+          ENV_BASE64: ${{ secrets.ENV_BASE64 || secrets.ENV_FILE_BASE64 }}
           TMDB_API_KEY: ${{ secrets.TMDB_ACCESS_TOKEN || secrets.TMDB_API_KEY || vars.TMDB_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || vars.GEMINI_API_KEY }}
         run: |
-          echo "# Auto-generated .env for GitHub Actions build" > .env
-          if [ -n "$TMDB_API_KEY" ]; then
-            echo "TMDB_API_KEY=$TMDB_API_KEY" >> .env
+          if [ -n "$ENV_BASE64" ]; then
+            echo "$ENV_BASE64" | base64 --decode > .env
+            echo ".env file decoded successfully from ENV_BASE64 secret."
           else
-            echo "TMDB_API_KEY=addfba41d0cb5aba2ebaae12ac92b671" >> .env
+            echo "# Auto-generated .env for GitHub Actions build" > .env
+            if [ -n "$TMDB_API_KEY" ]; then
+              echo "TMDB_API_KEY=$TMDB_API_KEY" >> .env
+            else
+              echo "TMDB_API_KEY=addfba41d0cb5aba2ebaae12ac92b671" >> .env
+            fi
+            if [ -n "$GEMINI_API_KEY" ]; then
+              echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> .env
+            fi
+            echo ".env file generated successfully from individual secrets."
           fi
-          if [ -n "$GEMINI_API_KEY" ]; then
-            echo "GEMINI_API_KEY=$GEMINI_API_KEY" >> .env
-          fi
-          echo ".env file generated successfully."
+          echo "Keys present in .env:"
+          cut -d= -f1 .env
 
       - name: 🛠 Configure Versioning & Package Name
         run: |

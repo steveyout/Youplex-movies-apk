@@ -3,6 +3,7 @@ package com.example.cinestream.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cinestream.data.analytics.AnalyticsManager
 import com.example.cinestream.data.api.TmdbRepository
 import com.example.cinestream.data.local.*
 import com.example.cinestream.data.model.*
@@ -116,6 +117,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 // Check against current versionCode (1) and versionName ("1.0")
                 val info = UpdateChecker.checkUpdate(currentVersionCode = 1, currentVersionName = "1.0")
+                AnalyticsManager.logAppUpdateCheck(info.latestVersionName, info.isUpdateRequired)
                 if (info.isUpdateAvailable || info.isUpdateRequired) {
                     _updateInfo.value = info
                 }
@@ -176,6 +178,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setSelectedServerId(serverId: String) {
         _selectedServerId.value = serverId
+        AnalyticsManager.logServerProviderChanged(serverId)
     }
 
     fun incrementBlockedAds() {
@@ -230,6 +233,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isSearching.value = false
             return
         }
+        AnalyticsManager.logSearch(query)
         searchJob = viewModelScope.launch {
             _isSearching.value = true
             delay(300) // Debounce
@@ -242,6 +246,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _selectedMedia.value = item
         _selectedSeason.value = 1
         _selectedEpisode.value = 1
+        AnalyticsManager.logMediaSelected(item.tmdbId, item.displayTitle, if (item.mediaType == MediaType.TV) "tv" else "movie")
 
         if (item.mediaType == MediaType.TV) {
             viewModelScope.launch {

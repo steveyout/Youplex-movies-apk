@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
+import com.example.cinestream.data.analytics.AnalyticsManager
 import com.example.cinestream.ui.components.MandatoryUpdateDialog
 import com.example.cinestream.ui.screens.*
 import com.example.cinestream.ui.theme.CinemaRed
@@ -40,6 +41,13 @@ fun MainNavGraph(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val updateInfo by viewModel.updateInfo.collectAsState()
+
+    // Track Screen View Analytics
+    LaunchedEffect(currentRoute) {
+        currentRoute?.let { route ->
+            AnalyticsManager.logScreenView(route)
+        }
+    }
 
     // Mandatory Update Overlay
     updateInfo?.let { info ->
