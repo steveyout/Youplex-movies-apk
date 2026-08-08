@@ -243,7 +243,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "GitHub Repository: steveyout/youplex-apk",
+                                text = "GitHub Repository: steveyout/Youplex-movies-apk",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

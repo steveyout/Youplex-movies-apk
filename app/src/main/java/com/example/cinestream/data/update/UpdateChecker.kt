@@ -23,9 +23,10 @@ data class UpdateInfo(
 
 object UpdateChecker {
     private const val TAG = "UpdateChecker"
-    private const val GITHUB_RELEASE_URL = "https://api.github.com/repos/steveyout/youplex-apk/releases/latest"
-    private const val RAW_VERSION_URL = "https://raw.githubusercontent.com/steveyout/youplex-apk/main/version.json"
-    private const val FALLBACK_REPO_URL = "https://github.com/steveyout/youplex-apk/releases"
+    private const val GITHUB_RELEASE_URL = "https://api.github.com/repos/steveyout/Youplex-movies-apk/releases/latest"
+    private const val RAW_VERSION_URL = "https://raw.githubusercontent.com/steveyout/Youplex-movies-apk/main/version.json"
+    private const val FALLBACK_REPO_URL = "https://github.com/steveyout/Youplex-movies-apk/releases"
+    private const val SECONDARY_RELEASE_URL = "https://api.github.com/repos/steveyout/youplex-apk/releases/latest"
 
     suspend fun checkUpdate(currentVersionCode: Int, currentVersionName: String): UpdateInfo = withContext(Dispatchers.IO) {
         // 1. Try checking GitHub Release API
