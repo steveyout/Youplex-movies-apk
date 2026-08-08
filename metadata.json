@@ -1,0 +1,6 @@
+{
+  "name": "Youplex",
+  "description": "Stream movies and TV shows with TMDB integration, embed server switching, ad-blocking player, dark/light theme switcher, watchlists, and offline downloads.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
