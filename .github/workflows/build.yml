@@ -31,11 +31,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: 🔑 Setup Google Services & Keystore
+      - name: 🔑 Setup Google Services & Keystores
         run: |
-          if [ -f "debug.keystore.base64" ]; then
+          if [ -n "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 --decode > debug.keystore
+            echo "Decoded debug.keystore from secret DEBUG_KEYSTORE_BASE64."
+          elif [ -f "debug.keystore.base64" ]; then
             base64 --decode debug.keystore.base64 > debug.keystore
             echo "Decoded debug.keystore from debug.keystore.base64."
+          fi
+          if [ -n "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+            echo "Decoded release.keystore from secret RELEASE_KEYSTORE_BASE64."
+          elif [ -f "release.keystore.base64" ]; then
+            base64 --decode release.keystore.base64 > release.keystore
+            echo "Decoded release.keystore from release.keystore.base64."
           fi
           if [ -n "${{ secrets.GOOGLE_SERVICES_BASE64 }}" ]; then
             echo "${{ secrets.GOOGLE_SERVICES_BASE64 }}" | base64 --decode > ./app/google-services.json

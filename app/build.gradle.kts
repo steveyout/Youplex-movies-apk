@@ -51,18 +51,34 @@ android {
     create("debugConfig") {
       val debugKeystoreFile = file("${rootDir}/debug.keystore")
       val debugBase64File = file("${rootDir}/debug.keystore.base64")
-      if (!debugKeystoreFile.exists() && debugBase64File.exists()) {
-        try {
-          val bytes = Base64.getDecoder().decode(debugBase64File.readText().replace("\\s".toRegex(), ""))
-          debugKeystoreFile.writeBytes(bytes)
-        } catch (e: Exception) {
-          println("Error auto-decoding debug.keystore.base64: ${e.message}")
+      val debugBase64Env = System.getenv("DEBUG_KEYSTORE_BASE64")
+
+      if (!debugKeystoreFile.exists()) {
+        val base64Content = debugBase64Env ?: if (debugBase64File.exists()) debugBase64File.readText() else null
+        if (!base64Content.isNullOrBlank()) {
+          try {
+            val bytes = Base64.getDecoder().decode(base64Content.replace("\\s".toRegex(), ""))
+            debugKeystoreFile.writeBytes(bytes)
+          } catch (e: Exception) {
+            println("Error auto-decoding debug.keystore.base64: ${e.message}")
+          }
         }
       }
-      storeFile = debugKeystoreFile
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+
+      if (debugKeystoreFile.exists()) {
+        storeFile = debugKeystoreFile
+        storePassword = "android"
+        keyAlias = "androiddebugkey"
+        keyPassword = "android"
+      } else {
+        val defaultDebugKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
+        if (defaultDebugKeystore.exists()) {
+          storeFile = defaultDebugKeystore
+          storePassword = "android"
+          keyAlias = "androiddebugkey"
+          keyPassword = "android"
+        }
+      }
     }
   }
 
