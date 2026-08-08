@@ -177,7 +177,9 @@ jobs:
           format: markdown
           message: |
             🚀 *Youplex v${{ github.run_number }} is out!*
-            🔗 [Download APK](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-latest.apk)
+
+            📥 [Download Latest Release](https://github.com/${{ github.repository }}/releases/latest)
+            📦 [Download Direct APK](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-latest.apk)
 
       - name: 💬 Discord Notification
         if: github.ref_name != 'dev' && env.DISCORD_WEBHOOK != ''
@@ -187,5 +189,12 @@ jobs:
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           status: ${{ job.status }}
+          title: "🚀 Youplex v${{ github.run_number }} Release"
+          url: "https://github.com/${{ github.repository }}/releases/latest"
+          description: |
+            📢 **Youplex Update v${{ github.run_number }} is ready!**
+
+            📥 [Download Latest Release](https://github.com/${{ github.repository }}/releases/latest)
+            📦 [Download Direct APK](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-latest.apk)
           content: "@everyone 📢 Youplex Update v${{ github.run_number }} is ready!"
           color: 0xE91E63
