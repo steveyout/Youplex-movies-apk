@@ -26,11 +26,27 @@ android {
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/release.keystore"
+      val releaseKeystoreFile = file(keystorePath)
+      val releaseBase64File = file("${rootDir}/release.keystore.base64")
+      val releaseBase64Env = System.getenv("RELEASE_KEYSTORE_BASE64")
+
+      if (!releaseKeystoreFile.exists()) {
+        val base64Content = releaseBase64Env ?: if (releaseBase64File.exists()) releaseBase64File.readText() else null
+        if (!base64Content.isNullOrBlank()) {
+          try {
+            val bytes = Base64.getDecoder().decode(base64Content.replace("\\s".toRegex(), ""))
+            releaseKeystoreFile.writeBytes(bytes)
+          } catch (e: Exception) {
+            println("Error decoding release keystore from base64: ${e.message}")
+          }
+        }
+      }
+
+      storeFile = releaseKeystoreFile
+      storePassword = System.getenv("STORE_PASSWORD") ?: System.getenv("RELEASE_STORE_PASSWORD") ?: "android"
+      keyAlias = System.getenv("KEY_ALIAS") ?: System.getenv("RELEASE_KEY_ALIAS") ?: "upload"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: System.getenv("RELEASE_KEY_PASSWORD") ?: "android"
     }
     create("debugConfig") {
       val debugKeystoreFile = file("${rootDir}/debug.keystore")
