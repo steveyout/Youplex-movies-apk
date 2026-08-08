@@ -77,7 +77,7 @@ class TmdbRepository {
                                 seasonNumber = seasonNum,
                                 name = s.optString("name", "Season $seasonNum"),
                                 episodeCount = s.optInt("episode_count", 10),
-                                posterPath = s.optString("poster_path", null)
+                                posterPath = if (s.has("poster_path") && !s.isNull("poster_path")) s.optString("poster_path") else null
                             )
                         )
                     }
@@ -112,7 +112,7 @@ class TmdbRepository {
                             seasonNumber = seasonNumber,
                             name = ep.optString("name", "Episode ${i + 1}"),
                             overview = ep.optString("overview", "Overview unavailable."),
-                            stillPath = ep.optString("still_path", null),
+                            stillPath = if (ep.has("still_path") && !ep.isNull("still_path")) ep.optString("still_path") else null,
                             voteAverage = ep.optDouble("vote_average", 8.2)
                         )
                     )
