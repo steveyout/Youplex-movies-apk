@@ -43,7 +43,7 @@ object UpdateChecker {
                 val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
                 val json = JSONObject(jsonStr)
 
-                val tagName = json.optString("tag_name", "v1.0").removePrefix("v").trim()
+                val tagName = json.optString("tag_name", "v1.0")
                 val body = json.optString("body", "Bug fixes and streaming performance improvements.")
                 val htmlUrl = json.optString("html_url", FALLBACK_REPO_URL)
 
@@ -54,18 +54,25 @@ object UpdateChecker {
                     downloadUrl = firstAsset.optString("browser_download_url", htmlUrl)
                 }
 
-                // Parse version numbers (e.g., "1.1" -> versionCode ~ 2, or compare semantic versions)
                 val latestCode = parseVersionCodeFromTag(tagName, currentVersionCode)
-                val isNewer = isVersionNewer(currentVersionName, tagName) || latestCode > currentVersionCode
+                val isNewer = isVersionNewer(
+                    currentName = currentVersionName,
+                    currentCode = currentVersionCode,
+                    latestTag = tagName,
+                    latestCode = latestCode
+                )
 
-                // Check if release body includes mandatory indicator "[MANDATORY]" or "force_update: true"
-                val isForceUpdate = isNewer && (body.contains("[MANDATORY]", ignoreCase = true) || body.contains("force_update", ignoreCase = true) || latestCode > currentVersionCode)
+                // Check if release body includes mandatory indicator "[MANDATORY]" or "force_update"
+                val isForceUpdate = isNewer && (
+                    body.contains("[MANDATORY]", ignoreCase = true) ||
+                    body.contains("force_update", ignoreCase = true)
+                )
 
                 if (isNewer) {
                     return@withContext UpdateInfo(
                         isUpdateRequired = isForceUpdate,
                         isUpdateAvailable = true,
-                        latestVersionName = tagName,
+                        latestVersionName = tagName.removePrefix("v").trim(),
                         latestVersionCode = latestCode,
                         minRequiredVersionCode = latestCode,
                         downloadUrl = downloadUrl,
@@ -95,9 +102,14 @@ object UpdateChecker {
                 val minRequiredCode = json.optInt("minRequiredVersionCode", 1)
                 val forceUpdate = json.optBoolean("forceUpdate", false)
                 val downloadUrl = json.optString("downloadUrl", FALLBACK_REPO_URL)
-                val notes = json.optString("releaseNotes", "A mandatory system update is available.")
+                val notes = json.optString("releaseNotes", "A system update is available.")
 
-                val isNewer = latestVersionCode > currentVersionCode || isVersionNewer(currentVersionName, latestVersionName)
+                val isNewer = isVersionNewer(
+                    currentName = currentVersionName,
+                    currentCode = currentVersionCode,
+                    latestTag = latestVersionName,
+                    latestCode = latestVersionCode
+                )
                 val isRequired = isNewer && (forceUpdate || currentVersionCode < minRequiredCode)
 
                 if (isNewer) {
@@ -117,7 +129,7 @@ object UpdateChecker {
             Log.e(TAG, "Raw version check failed: ${e.message}")
         }
 
-        // No update found or up to date
+        // No update found or app is up to date
         UpdateInfo(
             isUpdateRequired = false,
             isUpdateAvailable = false,
@@ -131,36 +143,63 @@ object UpdateChecker {
 
     private fun parseVersionCodeFromTag(tag: String, defaultCode: Int): Int {
         return try {
-            val parts = tag.split(".")
-            if (parts.size >= 2) {
-                val major = parts[0].toIntOrNull() ?: 1
-                val minor = parts[1].toIntOrNull() ?: 0
-                val patch = if (parts.size > 2) parts[2].toIntOrNull() ?: 0 else 0
-                major * 100 + minor * 10 + patch
-            } else {
-                tag.toIntOrNull() ?: (defaultCode + 1)
+            val clean = tag.removePrefix("v").substringBefore("-").trim()
+            clean.toIntOrNull() ?: run {
+                val parts = clean.split(".").mapNotNull { it.toIntOrNull() }
+                if (parts.isNotEmpty()) {
+                    parts.last()
+                } else {
+                    defaultCode
+                }
             }
         } catch (e: Exception) {
-            defaultCode + 1
+            defaultCode
         }
     }
 
-    private fun isVersionNewer(current: String, latest: String): Boolean {
-        try {
-            val currParts = current.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
-            val lateParts = latest.removePrefix("v").split(".").mapNotNull { it.toIntOrNull() }
+    private fun isVersionNewer(
+        currentName: String,
+        currentCode: Int,
+        latestTag: String,
+        latestCode: Int
+    ): Boolean {
+        // Primary check via integer version codes
+        if (latestCode > currentCode) return true
+        if (latestCode < currentCode && latestCode > 0 && currentCode > 0) return false
 
-            val maxLen = maxOf(currParts.size, lateParts.size)
-            for (i in 0 until maxLen) {
-                val c = currParts.getOrElse(i) { 0 }
-                val l = lateParts.getOrElse(i) { 0 }
-                if (l > c) return true
-                if (l < c) return false
+        // Secondary check via semantic version strings
+        return try {
+            val currClean = currentName.removePrefix("v").substringBefore("-").trim()
+            val lateClean = latestTag.removePrefix("v").substringBefore("-").trim()
+
+            if (currClean == lateClean) return false
+
+            val lateInt = lateClean.toIntOrNull()
+            if (lateInt != null) {
+                val currParts = currClean.split(".").mapNotNull { it.toIntOrNull() }
+                if (currParts.isNotEmpty()) {
+                    if (currParts.last() == lateInt) return false
+                    if (currParts.last() < lateInt) return true
+                    if (currParts.last() > lateInt) return false
+                }
             }
+
+            val currParts = currClean.split(".").mapNotNull { it.toIntOrNull() }
+            val lateParts = lateClean.split(".").mapNotNull { it.toIntOrNull() }
+
+            if (currParts.isNotEmpty() && lateParts.isNotEmpty()) {
+                val maxLen = maxOf(currParts.size, lateParts.size)
+                for (i in 0 until maxLen) {
+                    val c = currParts.getOrElse(i) { 0 }
+                    val l = lateParts.getOrElse(i) { 0 }
+                    if (l > c) return true
+                    if (l < c) return false
+                }
+            }
+            false
         } catch (e: Exception) {
-            return latest != current
+            false
         }
-        return false
     }
 
     fun openDownloadUrl(context: Context, url: String) {

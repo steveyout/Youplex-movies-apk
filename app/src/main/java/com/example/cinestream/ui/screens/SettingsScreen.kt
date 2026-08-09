@@ -238,7 +238,7 @@ fun SettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Installed Version: v1.0 (Build 1)",
+                                text = "Installed Version: v${com.example.BuildConfig.VERSION_NAME} (Build ${com.example.BuildConfig.VERSION_CODE})",
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )

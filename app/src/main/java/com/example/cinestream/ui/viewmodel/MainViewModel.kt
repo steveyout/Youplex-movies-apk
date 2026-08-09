@@ -115,11 +115,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _isCheckingUpdate.value = true
             try {
-                // Check against current versionCode (1) and versionName ("1.0")
-                val info = UpdateChecker.checkUpdate(currentVersionCode = 1, currentVersionName = "1.0")
+                val currentCode = com.example.BuildConfig.VERSION_CODE
+                val currentName = com.example.BuildConfig.VERSION_NAME
+                val info = UpdateChecker.checkUpdate(currentVersionCode = currentCode, currentVersionName = currentName)
                 AnalyticsManager.logAppUpdateCheck(info.latestVersionName, info.isUpdateRequired)
                 if (info.isUpdateAvailable || info.isUpdateRequired) {
                     _updateInfo.value = info
+                } else {
+                    _updateInfo.value = null
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
