@@ -182,7 +182,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = currentServer?.name ?: "Server 1 (CinemaOS)",
+                            text = currentServer?.name ?: "Echo",
                             fontSize = 13.sp,
                             color = CinemaRed,
                             fontWeight = FontWeight.SemiBold

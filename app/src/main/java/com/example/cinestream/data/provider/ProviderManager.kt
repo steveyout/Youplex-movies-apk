@@ -12,73 +12,73 @@ object ProviderManager {
     val providers: List<Provider> = listOf(
         Provider(
             id = "vidlink",
-            name = "Server 1 (VidLink Fast Pro)",
+            name = "Echo",
             baseUrl = "https://vidlink.pro",
             enabled = true
         ),
         Provider(
             id = "vidsrc_vip",
-            name = "Server 2 (Vidsrc VIP)",
+            name = "Nova",
             baseUrl = "https://vidsrc.to",
             enabled = true
         ),
         Provider(
             id = "cinemaos",
-            name = "Server 3 (CinemaOS Ultra)",
+            name = "Velocity",
             baseUrl = "https://cinemaos.tech",
             enabled = true
         ),
         Provider(
             id = "vidking",
-            name = "Server 4 (VidKing HD)",
+            name = "Apex",
             baseUrl = "https://www.vidking.net",
             enabled = true
         ),
         Provider(
             id = "videasy",
-            name = "Server 5 (VidEasy 4K)",
+            name = "Pulse",
             baseUrl = "https://player.videasy.net",
             enabled = true
         ),
         Provider(
             id = "embedsu",
-            name = "Server 6 (EmbedSU)",
+            name = "Zenith",
             baseUrl = "https://embed.su",
             enabled = true
         ),
         Provider(
             id = "vidsrc_me",
-            name = "Server 7 (Vidsrc Me)",
+            name = "Cipher",
             baseUrl = "https://vidsrc.me",
             enabled = true
         ),
         Provider(
             id = "autoembed",
-            name = "Server 8 (AutoEmbed)",
+            name = "Nebula",
             baseUrl = "https://player.autoembed.cc",
             enabled = true
         ),
         Provider(
             id = "vidsrc_cc",
-            name = "Server 9 (Vidsrc CC)",
+            name = "Orion",
             baseUrl = "https://vidsrc.cc",
             enabled = true
         ),
         Provider(
             id = "twoembed",
-            name = "Server 10 (2Embed)",
+            name = "Titan",
             baseUrl = "https://www.2embed.cc",
             enabled = true
         ),
         Provider(
             id = "multiembed",
-            name = "Server 11 (MultiEmbed)",
+            name = "Spectre",
             baseUrl = "https://multiembed.mov",
             enabled = true
         ),
         Provider(
             id = "rivestream",
-            name = "Server 12 (RiveStream)",
+            name = "Eclipse",
             baseUrl = "https://rivestream.org",
             enabled = true
         )

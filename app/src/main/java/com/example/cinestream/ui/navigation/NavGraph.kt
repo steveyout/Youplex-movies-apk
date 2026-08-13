@@ -33,6 +33,7 @@ sealed class Screen(val route: String, val title: String, val icon: androidx.com
     object Player : Screen("player", "Player", Icons.Default.Home)
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MainNavGraph(
     navController: NavHostController,
@@ -123,56 +124,61 @@ fun MainNavGraph(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Home.route,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(Screen.Home.route) {
-                HomeScreen(
-                    viewModel = viewModel,
-                    onMediaClick = { item ->
-                        viewModel.selectMedia(item)
-                        navController.navigate(Screen.Detail.route)
-                    },
-                    onPlayClick = { item ->
-                        viewModel.selectMedia(item)
-                        navController.navigate(Screen.Player.route)
-                    },
-                    onContinueWatchingClick = { item, season, episode ->
-                        viewModel.selectMedia(item)
-                        viewModel.selectSeason(season)
-                        viewModel.selectEpisode(episode)
-                        navController.navigate(Screen.Player.route)
-                    },
-                    onSearchClick = {
-                        navController.navigate(Screen.Explore.route)
-                    }
-                )
-            }
+        SharedTransitionLayout {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Home.route,
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        viewModel = viewModel,
+                        onMediaClick = { item ->
+                            viewModel.selectMedia(item)
+                            navController.navigate(Screen.Detail.route)
+                        },
+                        onPlayClick = { item ->
+                            viewModel.selectMedia(item)
+                            navController.navigate(Screen.Player.route)
+                        },
+                        onContinueWatchingClick = { item, season, episode ->
+                            viewModel.selectMedia(item)
+                            viewModel.selectSeason(season)
+                            viewModel.selectEpisode(episode)
+                            navController.navigate(Screen.Player.route)
+                        },
+                        onSearchClick = {
+                            navController.navigate(Screen.Explore.route)
+                        },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable
+                    )
+                }
 
-            composable(Screen.Explore.route) {
-                ExploreScreen(
-                    viewModel = viewModel,
-                    onMediaClick = { item ->
-                        viewModel.selectMedia(item)
-                        navController.navigate(Screen.Detail.route)
-                    }
-                )
-            }
+                composable(Screen.Explore.route) {
+                    ExploreScreen(
+                        viewModel = viewModel,
+                        onMediaClick = { item ->
+                            viewModel.selectMedia(item)
+                            navController.navigate(Screen.Detail.route)
+                        }
+                    )
+                }
 
-            composable(Screen.Detail.route) {
-                DetailScreen(
-                    viewModel = viewModel,
-                    onBackClick = { navController.popBackStack() },
-                    onPlayClick = { media, season, episode, serverId ->
-                        navController.navigate(Screen.Player.route)
-                    },
-                    onSimilarMediaClick = { item ->
-                        viewModel.selectMedia(item)
-                    }
-                )
-            }
+                composable(Screen.Detail.route) {
+                    DetailScreen(
+                        viewModel = viewModel,
+                        onBackClick = { navController.popBackStack() },
+                        onPlayClick = { media, season, episode, serverId ->
+                            navController.navigate(Screen.Player.route)
+                        },
+                        onSimilarMediaClick = { item ->
+                            viewModel.selectMedia(item)
+                        },
+                        sharedTransitionScope = this@SharedTransitionLayout,
+                        animatedVisibilityScope = this@composable
+                    )
+                }
 
             composable(Screen.Player.route) {
                 val selectedMedia by viewModel.selectedMedia.collectAsState()
@@ -227,4 +233,5 @@ fun MainNavGraph(
             }
         }
     }
+}
 }

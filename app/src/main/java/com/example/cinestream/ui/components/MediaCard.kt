@@ -1,5 +1,8 @@
 package com.example.cinestream.ui.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -29,15 +32,27 @@ import com.example.cinestream.data.model.MediaType
 import com.example.cinestream.ui.theme.CinemaGold
 import com.example.cinestream.ui.theme.CinemaRed
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MediaCard(
     item: MediaItem,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    cardWidth: Int = 140
+    cardWidth: Int = 140,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (isPressed) 0.95f else 1.0f, label = "cardScale")
+
+    val posterModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedElement(
+                state = rememberSharedContentState(key = "media_poster_${item.tmdbId}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else Modifier
 
     Column(
         modifier = modifier
@@ -63,7 +78,9 @@ fun MediaCard(
                     .build(),
                 contentDescription = item.displayTitle,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(posterModifier)
             )
 
             // Top Type Pill (MOVIE / TV)

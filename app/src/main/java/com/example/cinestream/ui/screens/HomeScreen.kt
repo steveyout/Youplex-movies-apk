@@ -42,15 +42,21 @@ import com.example.cinestream.ui.theme.AppThemeMode
 import com.example.cinestream.ui.theme.CinemaRed
 import com.example.cinestream.ui.viewmodel.MainViewModel
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import com.example.cinestream.data.model.Genre
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
     onMediaClick: (MediaItem) -> Unit,
     onPlayClick: (MediaItem) -> Unit,
     onContinueWatchingClick: (MediaItem, Int, Int) -> Unit,
-    onSearchClick: () -> Unit
+    onSearchClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     val trending by viewModel.trending.collectAsState()
     val popularMovies by viewModel.popularMovies.collectAsState()
@@ -163,7 +169,9 @@ fun HomeScreen(
                         onItemClick = onMediaClick,
                         onPlayClick = onPlayClick,
                         onWatchlistToggle = { viewModel.toggleWatchlist(it) },
-                        isInWatchlist = { isInWatchlist(it) }
+                        isInWatchlist = { isInWatchlist(it) },
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedVisibilityScope = animatedVisibilityScope
                     )
                 }
 
@@ -256,7 +264,9 @@ fun HomeScreen(
                             MediaSectionRow(
                                 title = "🎬 Top ${selectedGenre?.name} Titles",
                                 items = genreMediaItems,
-                                onMediaClick = onMediaClick
+                                onMediaClick = onMediaClick,
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedVisibilityScope = animatedVisibilityScope
                             )
                         }
                     }
@@ -291,7 +301,9 @@ fun HomeScreen(
                         MediaSectionRow(
                             title = "🍿 Trending Movies",
                             items = popularMovies,
-                            onMediaClick = onMediaClick
+                            onMediaClick = onMediaClick,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope
                         )
                     }
 
@@ -300,7 +312,9 @@ fun HomeScreen(
                         MediaSectionRow(
                             title = "📺 Popular TV Shows",
                             items = popularTv,
-                            onMediaClick = onMediaClick
+                            onMediaClick = onMediaClick,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope
                         )
                     }
 
@@ -309,7 +323,9 @@ fun HomeScreen(
                         MediaSectionRow(
                             title = "⭐ Top Rated Cinema",
                             items = topRated,
-                            onMediaClick = onMediaClick
+                            onMediaClick = onMediaClick,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = animatedVisibilityScope
                         )
                     }
                 }
@@ -509,11 +525,14 @@ fun ContinueWatchingCard(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MediaSectionRow(
     title: String,
     items: List<MediaItem>,
-    onMediaClick: (MediaItem) -> Unit
+    onMediaClick: (MediaItem) -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -531,7 +550,9 @@ fun MediaSectionRow(
             items(items) { item ->
                 MediaCard(
                     item = item,
-                    onClick = { onMediaClick(item) }
+                    onClick = { onMediaClick(item) },
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope
                 )
             }
         }

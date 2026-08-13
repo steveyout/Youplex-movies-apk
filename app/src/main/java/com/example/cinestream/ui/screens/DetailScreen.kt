@@ -1,5 +1,8 @@
 package com.example.cinestream.ui.screens
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,16 +45,45 @@ import com.example.cinestream.ui.theme.CinemaGold
 import com.example.cinestream.ui.theme.CinemaRed
 import com.example.cinestream.ui.viewmodel.MainViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun DetailScreen(
     viewModel: MainViewModel,
     onBackClick: () -> Unit,
     onPlayClick: (MediaItem, Int, Int, String) -> Unit,
-    onSimilarMediaClick: (MediaItem) -> Unit
+    onSimilarMediaClick: (MediaItem) -> Unit,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     val selectedMedia by viewModel.selectedMedia.collectAsState()
     val media = selectedMedia ?: return
+
+    val backdropModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedElement(
+                state = rememberSharedContentState(key = "media_backdrop_${media.tmdbId}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else Modifier
+
+    val posterModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedElement(
+                state = rememberSharedContentState(key = "media_poster_${media.tmdbId}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else Modifier
+
+    val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                sharedContentState = rememberSharedContentState(key = "media_title_${media.tmdbId}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else Modifier
 
     val selectedSeason by viewModel.selectedSeason.collectAsState()
     val selectedEpisode by viewModel.selectedEpisode.collectAsState()
@@ -88,7 +120,9 @@ fun DetailScreen(
                         .build(),
                     contentDescription = media.displayTitle,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .then(backdropModifier)
                 )
 
                 // Gradient Overlay
@@ -149,6 +183,7 @@ fun DetailScreen(
                             .height(160.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .border(2.dp, CinemaRed, RoundedCornerShape(12.dp))
+                            .then(posterModifier)
                     )
 
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -169,7 +204,8 @@ fun DetailScreen(
                             text = media.displayTitle,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = titleModifier
                         )
 
                         Row(

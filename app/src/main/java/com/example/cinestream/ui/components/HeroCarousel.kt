@@ -1,5 +1,8 @@
 package com.example.cinestream.ui.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -31,6 +34,7 @@ import com.example.cinestream.ui.theme.CinemaGold
 import com.example.cinestream.ui.theme.CinemaRed
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HeroCarousel(
     items: List<MediaItem>,
@@ -38,7 +42,9 @@ fun HeroCarousel(
     onPlayClick: (MediaItem) -> Unit,
     onWatchlistToggle: (MediaItem) -> Unit,
     isInWatchlist: (String) -> Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     if (items.isEmpty()) return
 
@@ -57,10 +63,29 @@ fun HeroCarousel(
     val currentItem = items.getOrNull(currentIndex) ?: return
     val inWatchlist = isInWatchlist(currentItem.tmdbId)
 
+    val backdropModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedElement(
+                state = rememberSharedContentState(key = "media_backdrop_${currentItem.tmdbId}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else Modifier
+
+    val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                sharedContentState = rememberSharedContentState(key = "media_title_${currentItem.tmdbId}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else Modifier
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(380.dp)
+            .clickable { onItemClick(currentItem) }
             .testTag("hero_carousel")
     ) {
         // Backdrop Image
@@ -71,7 +96,9 @@ fun HeroCarousel(
                 .build(),
             contentDescription = currentItem.displayTitle,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .then(backdropModifier)
         )
 
         // Vignette Gradient Overlays
@@ -120,7 +147,8 @@ fun HeroCarousel(
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = titleModifier
             )
 
             // Rating & Meta info

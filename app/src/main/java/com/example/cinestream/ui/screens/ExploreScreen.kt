@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import com.example.cinestream.data.model.MediaItem
 import com.example.cinestream.data.model.MediaType
 import com.example.cinestream.ui.components.ExploreGridSkeleton
@@ -34,6 +35,7 @@ import com.example.cinestream.ui.components.MediaCard
 import com.example.cinestream.ui.theme.CinemaRed
 import com.example.cinestream.ui.viewmodel.MainViewModel
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ExploreScreen(
     viewModel: MainViewModel,

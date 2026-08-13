@@ -1,7 +1,12 @@
 package com.example.cinestream.ui.screens
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.graphics.Bitmap
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
@@ -78,6 +83,39 @@ fun PlayerScreen(
 
     val currentProvider = remember(currentServerId) {
         ProviderManager.providers.find { it.id == currentServerId } ?: ProviderManager.providers.first()
+    }
+
+    val context = LocalContext.current
+
+    // Request Audio Focus so media sound plays clearly
+    DisposableEffect(Unit) {
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+        val focusRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MOVIE)
+                        .build()
+                )
+                .build()
+        } else null
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && focusRequest != null) {
+            audioManager?.requestAudioFocus(focusRequest)
+        } else {
+            @Suppress("DEPRECATION")
+            audioManager?.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+        }
+
+        onDispose {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && focusRequest != null) {
+                audioManager?.abandonAudioFocusRequest(focusRequest)
+            } else {
+                @Suppress("DEPRECATION")
+                audioManager?.abandonAudioFocus(null)
+            }
+        }
     }
 
     // Save watch history on load
@@ -532,7 +570,7 @@ fun ServerDropdownSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val currentProvider = remember(currentServerId, providers) {
-        providers.find { it.id == currentServerId } ?: providers.firstOrNull() ?: Provider("vidlink", "Server 1", "", true)
+        providers.find { it.id == currentServerId } ?: providers.firstOrNull() ?: Provider("vidlink", "Echo", "", true)
     }
 
     Box(modifier = modifier) {
@@ -555,7 +593,7 @@ fun ServerDropdownSelector(
                     modifier = Modifier.size(15.dp)
                 )
                 Text(
-                    text = currentProvider.name.split(" ")[0] + " " + currentProvider.name.split(" ").getOrElse(1) { "" },
+                    text = currentProvider.name,
                     color = Color.White,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,

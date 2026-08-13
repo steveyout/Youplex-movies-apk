@@ -122,23 +122,35 @@ object AdBlocker {
                 }
             }, true);
 
-            // 3. Remove overlay ads, invisible click-jacking overlays, and known ad elements
+            // 3. Remove overlay ads, invisible click-jacking overlays, and known ad elements without removing player/audio controls
             function cleanAds() {
                 var adSelectors = [
-                    'div[id*="ad"]', 'div[class*="ad"]', 'div[id*="popup"]', 'div[class*="popup"]',
-                    'iframe[src*="ad"]', 'iframe[src*="pop"]', 'div[style*="z-index: 2147483647"]',
+                    'div[class*="ad-box"]', 'div[class*="ad-container"]', 'div[class*="ad-wrapper"]',
+                    'div[id*="ad-box"]', 'div[id*="ad-container"]', 'div[class*="popunder"]', 'div[class*="popup-banner"]',
+                    'iframe[src*="adsterra"]', 'iframe[src*="popads"]', 'div[style*="z-index: 2147483647"]',
                     'div[style*="z-index: 999999"]', 'div[style*="z-index:999999"]',
                     '.popunder', '#popunder', '.ad-overlay', '#ad-overlay', '.ad-banner', '.adsbygoogle',
-                    'div[class*="banner"]', 'div[id*="banner"]', 'a[href*="bet"]', 'a[href*="casino"]',
-                    'iframe[src*="bet"]', 'iframe[src*="1xbet"]'
+                    'a[href*="bet"]', 'a[href*="casino"]', 'iframe[src*="1xbet"]'
                 ];
 
                 adSelectors.forEach(function(selector) {
                     try {
                         var elements = document.querySelectorAll(selector);
                         elements.forEach(function(el) {
-                            // Ensure we never hide or delete video player elements
-                            if (el.tagName !== 'VIDEO' && !el.querySelector('video') && !el.id.includes('player') && !el.className.includes('player')) {
+                            // Ensure we never hide or delete video/audio player or control elements
+                            var tag = el.tagName ? el.tagName.toLowerCase() : '';
+                            var id = el.id ? el.id.toLowerCase() : '';
+                            var cls = el.className ? (typeof el.className === 'string' ? el.className.toLowerCase() : '') : '';
+
+                            var isPlayerOrAudio = tag === 'video' || tag === 'audio' ||
+                                id.indexOf('player') !== -1 || cls.indexOf('player') !== -1 ||
+                                id.indexOf('control') !== -1 || cls.indexOf('control') !== -1 ||
+                                id.indexOf('audio') !== -1 || cls.indexOf('audio') !== -1 ||
+                                id.indexOf('jw') !== -1 || cls.indexOf('jw') !== -1 ||
+                                id.indexOf('vjs') !== -1 || cls.indexOf('vjs') !== -1 ||
+                                el.querySelector('video') || el.querySelector('audio');
+
+                            if (!isPlayerOrAudio) {
                                 el.style.display = 'none';
                                 if (el.parentNode) {
                                     el.parentNode.removeChild(el);
@@ -155,10 +167,31 @@ object AdBlocker {
                 }
             }
 
-            // Clean ads periodically
+            // 4. Unmute and enable sound for all video/audio embeds
+            function unmuteAndEnableSound() {
+                try {
+                    var mediaElements = document.querySelectorAll('video, audio');
+                    for (var i = 0; i < mediaElements.length; i++) {
+                        var media = mediaElements[i];
+                        media.muted = false;
+                        media.defaultMuted = false;
+                        if (media.volume < 0.1) {
+                            media.volume = 1.0;
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Clean ads and force sound periodically
             cleanAds();
+            unmuteAndEnableSound();
             setInterval(cleanAds, 800);
-            
+            setInterval(unmuteAndEnableSound, 800);
+
+            // User gesture triggers sound unmute on touch or click
+            window.addEventListener('click', unmuteAndEnableSound, true);
+            window.addEventListener('touchstart', unmuteAndEnableSound, true);
+
             if (window.AndroidAdBlock) {
                 window.AndroidAdBlock.onAdBlocked();
             }
