@@ -108,40 +108,16 @@ jobs:
           fi
 
       - name: 📺 Build Android TV APK
-        env:
-          TMDB_API_KEY: ${{ secrets.TMDB_ACCESS_TOKEN || secrets.TMDB_API_KEY }}
         run: |
-          # Clean previous build artifacts
-          rm -rf app/build/outputs/apk
-          
-          # Target TV package name
-          if [ "${{ github.ref_name }}" == "dev" ]; then
-            TV_PACKAGE="cc.youplex.movies.tv.dev"
+          # The app supports both Mobile and Android TV (Leanback launcher & banner are configured)
+          # We provide the universal build as youplex-tv.apk using the identical mobile package name
+          if [ -f "./youplex-mobile.apk" ]; then
+            cp ./youplex-mobile.apk ./youplex-tv.apk
+            echo "Android TV APK ready at ./youplex-tv.apk"
           else
-            TV_PACKAGE="cc.youplex.movies.tv"
-          fi
-          
-          # Configure TV Package Application ID
-          sed -i "s/applicationId = \"[^\"]*\"/applicationId = \"$TV_PACKAGE\"/g" app/build.gradle.kts
-          
-          # Ensure google-services.json has a client matching the TV package name
-          if [ -f "app/google-services.json" ]; then
-            python3 -c "import json, sys; p='app/google-services.json'; d=json.load(open(p)); c=d.get('client',[]); (open(p,'w').write(json.dumps({**d, 'client': c + [{**c[0], 'android_client_info': {'package_name': sys.argv[1]}}]}, indent=2))) if (sys.argv[1] not in [x.get('android_client_info',{}).get('package_name') for x in c] and c) else None" "$TV_PACKAGE"
-          fi
-          
-          if [ -f "./gradlew" ]; then
-            ./gradlew assembleDebug --no-daemon --stacktrace --info
-          else
-            gradle assembleDebug --no-daemon --stacktrace --info
-          fi
-          
-          # Locate generated TV APK and copy
-          TV_APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -f "$TV_APK_PATH" ]; then
-            cp "$TV_APK_PATH" ./youplex-tv.apk
+            MOBILE_APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+            cp "$MOBILE_APK_PATH" ./youplex-tv.apk
             echo "Android TV APK generated at ./youplex-tv.apk"
-          else
-            echo "Error: Android TV APK not found!" && exit 1
           fi
 
       - name: 🚢 Upload to Release
