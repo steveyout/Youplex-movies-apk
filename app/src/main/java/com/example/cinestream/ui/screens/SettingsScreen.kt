@@ -2,11 +2,13 @@ package com.example.cinestream.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BrightnessAuto
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.LightMode
@@ -73,10 +75,23 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Theme Switcher Card
+            val isSystemDark = isSystemInDarkTheme()
+            val systemStatusLabel = if (isSystemDark) "Dark Mode active" else "Light Mode active"
+
             SettingsCard(title = "🎨 Visual Theme Switcher") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     ThemeOptionRow(
-                        title = "OLED Pure Dark Mode (Recommended)",
+                        title = "System Default (Auto-Switch)",
+                        subtitle = "Automatically follows device theme ($systemStatusLabel)",
+                        icon = Icons.Default.BrightnessAuto,
+                        isSelected = themeMode == AppThemeMode.SYSTEM,
+                        onClick = { viewModel.setThemeMode(AppThemeMode.SYSTEM) },
+                        tag = "theme_system_option"
+                    )
+
+                    ThemeOptionRow(
+                        title = "OLED Pure Dark Mode",
+                        subtitle = "Deep black contrast optimized for AMOLED screens",
                         icon = Icons.Default.DarkMode,
                         isSelected = themeMode == AppThemeMode.DARK,
                         onClick = { viewModel.setThemeMode(AppThemeMode.DARK) },
@@ -85,18 +100,11 @@ fun SettingsScreen(
 
                     ThemeOptionRow(
                         title = "Warm Crisp Light Mode",
+                        subtitle = "Clean high-contrast daytime viewing aesthetic",
                         icon = Icons.Default.LightMode,
                         isSelected = themeMode == AppThemeMode.LIGHT,
                         onClick = { viewModel.setThemeMode(AppThemeMode.LIGHT) },
                         tag = "theme_light_option"
-                    )
-
-                    ThemeOptionRow(
-                        title = "System Default Theme",
-                        icon = Icons.Default.Settings,
-                        isSelected = themeMode == AppThemeMode.SYSTEM,
-                        onClick = { viewModel.setThemeMode(AppThemeMode.SYSTEM) },
-                        tag = "theme_system_option"
                     )
                 }
             }
@@ -373,6 +381,7 @@ fun SettingsCard(
 @Composable
 fun ThemeOptionRow(
     title: String,
+    subtitle: String? = null,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
@@ -392,6 +401,7 @@ fun ThemeOptionRow(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
+                modifier = Modifier.weight(1f, fill = false),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -400,11 +410,20 @@ fun ThemeOptionRow(
                     contentDescription = null,
                     tint = if (isSelected) CinemaRed else MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    text = title,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) CinemaRed else MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Text(
+                        text = title,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) CinemaRed else MaterialTheme.colorScheme.onSurface
+                    )
+                    if (subtitle != null) {
+                        Text(
+                            text = subtitle,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             RadioButton(
                 selected = isSelected,

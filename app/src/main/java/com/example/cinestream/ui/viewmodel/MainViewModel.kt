@@ -21,12 +21,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val database = CineDatabase.getDatabase(application)
     private val dao = database.cineDao()
     private val tmdbRepo = TmdbRepository()
+    private val prefs = application.getSharedPreferences("cinestream_prefs", android.content.Context.MODE_PRIVATE)
 
-    // Preferences & Settings State
-    private val _themeMode = MutableStateFlow(AppThemeMode.DARK)
+    // Preferences & Settings State (Defaults to SYSTEM for automatic theme detection)
+    private val _themeMode = MutableStateFlow(
+        try {
+            val saved = prefs.getString("theme_mode", AppThemeMode.SYSTEM.name) ?: AppThemeMode.SYSTEM.name
+            AppThemeMode.valueOf(saved)
+        } catch (e: Exception) {
+            AppThemeMode.SYSTEM
+        }
+    )
     val themeMode: StateFlow<AppThemeMode> = _themeMode.asStateFlow()
 
-    private val _selectedServerId = MutableStateFlow(ProviderManager.DEFAULT_PROVIDER_ID)
+    private val _selectedServerId = MutableStateFlow(
+        prefs.getString("selected_server_id", ProviderManager.DEFAULT_PROVIDER_ID) ?: ProviderManager.DEFAULT_PROVIDER_ID
+    )
     val selectedServerId: StateFlow<String> = _selectedServerId.asStateFlow()
 
     private val _blockedAdsCount = MutableStateFlow(28)
@@ -177,10 +187,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setThemeMode(mode: AppThemeMode) {
         _themeMode.value = mode
+        prefs.edit().putString("theme_mode", mode.name).apply()
     }
 
     fun setSelectedServerId(serverId: String) {
         _selectedServerId.value = serverId
+        prefs.edit().putString("selected_server_id", serverId).apply()
         AnalyticsManager.logServerProviderChanged(serverId)
     }
 
