@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
 import android.widget.FrameLayout
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -65,10 +66,16 @@ fun PlayerScreen(
     var currentServerId by remember { mutableStateOf(serverId) }
     var showServerPicker by remember { mutableStateOf(false) }
     var showQuickBar by remember { mutableStateOf(false) }
+    var showExitConfirmation by remember { mutableStateOf(false) }
     var isLoadingPage by remember { mutableStateOf(true) }
     var hasPageError by remember { mutableStateOf(false) }
     var webViewRef by remember { mutableStateOf<WebView?>(null) }
     var customVideoView by remember { mutableStateOf<View?>(null) }
+
+    // Prevent accidental exit during active playback by intercepting system back gesture/button
+    BackHandler(enabled = true) {
+        showExitConfirmation = true
+    }
 
     val mediaTypeStr = if (media.mediaType == MediaType.TV) "tv" else "movie"
     val embedUrl = remember(media.tmdbId, mediaTypeStr, season, episode, currentServerId) {
@@ -354,7 +361,7 @@ fun PlayerScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 IconButton(
-                    onClick = onBackClick,
+                    onClick = { showExitConfirmation = true },
                     modifier = Modifier
                         .clip(CircleShape)
                         .background(Color.Black.copy(alpha = 0.7f))
@@ -556,6 +563,69 @@ fun PlayerScreen(
                         Text("Close", color = CinemaRed)
                     }
                 }
+            )
+        }
+
+        // Active Stream Exit Confirmation Dialog
+        if (showExitConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showExitConfirmation = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Exit Alert",
+                        tint = CinemaRed,
+                        modifier = Modifier.size(32.dp)
+                    )
+                },
+                title = {
+                    Text(
+                        text = "Exit Video Player?",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "A stream for \"${media.displayTitle}\" is currently active.",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Are you sure you want to stop watching? Your progress has been saved to your watch history.",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showExitConfirmation = false
+                            onBackClick()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = CinemaRed),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.testTag("confirm_exit_button")
+                    ) {
+                        Text("Exit Player", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                },
+                dismissButton = {
+                    OutlinedButton(
+                        onClick = { showExitConfirmation = false },
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.testTag("cancel_exit_button")
+                    ) {
+                        Text("Keep Watching", color = MaterialTheme.colorScheme.onSurface)
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.testTag("player_exit_confirmation_dialog")
             )
         }
     }
