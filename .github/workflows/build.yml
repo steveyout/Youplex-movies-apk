@@ -96,9 +96,9 @@ jobs:
         run: |
           chmod +x ./gradlew 2>/dev/null || true
           if [ -f "./gradlew" ]; then
-            ./gradlew assembleDebug --no-daemon
+            ./gradlew assembleDebug --no-daemon --stacktrace --info
           else
-            gradle assembleDebug --no-daemon
+            gradle assembleDebug --no-daemon --stacktrace --info
           fi
           
           # Locate generated Mobile APK and copy
@@ -126,9 +126,9 @@ jobs:
           fi
           
           if [ -f "./gradlew" ]; then
-            ./gradlew assembleDebug --no-daemon
+            ./gradlew assembleDebug --no-daemon --stacktrace --info
           else
-            gradle assembleDebug --no-daemon
+            gradle assembleDebug --no-daemon --stacktrace --info
           fi
           
           # Locate generated TV APK and copy
