@@ -1,0 +1,40 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Background Canvas -->
+    <path
+        android:fillColor="#0C0C0F"
+        android:pathData="M0,0h320v180h-320z" />
+    
+    <!-- Subtle gradient glow shape -->
+    <path
+        android:fillColor="#1E1E24"
+        android:pathData="M0,0h320v90h-320z" />
+
+    <!-- Cinema Red Accent Ribbon -->
+    <path
+        android:fillColor="#E50914"
+        android:pathData="M0,174h320v6h-320z" />
+
+    <!-- Clapper / Play Icon Emblem -->
+    <path
+        android:fillColor="#E50914"
+        android:pathData="M160,35 C137.91,35 120,52.91 120,75 C120,97.09 137.91,115 160,115 C182.09,115 200,97.09 200,75 C200,52.91 182.09,35 160,35 Z" />
+
+    <!-- Play Triangle Inside Emblem -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M152,60 L174,75 L152,90 Z" />
+
+    <!-- TV Pill Badge -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M185,42 h25 c3.3,0 6,2.7 6,6 v8 c0,3.3 -2.7,6 -6,6 h-25 c-3.3,0 -6,-2.7 -6,-6 v-8 c0,-3.3 2.7,-6 6,-6 z" />
+
+    <!-- Subtle framing lines -->
+    <path
+        android:fillColor="#33FFFFFF"
+        android:pathData="M40,140h240v1h-240z" />
+</vector>

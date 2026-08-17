@@ -5,7 +5,9 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -43,7 +46,13 @@ fun MediaCard(
     animatedVisibilityScope: AnimatedVisibilityScope? = null
 ) {
     var isPressed by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (isPressed) 0.95f else 1.0f, label = "cardScale")
+    var isFocused by remember { mutableStateOf(false) }
+    val targetScale = when {
+        isPressed -> 0.95f
+        isFocused -> 1.08f
+        else -> 1.0f
+    }
+    val scale by animateFloatAsState(targetScale, label = "cardScale")
 
     val posterModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
         with(sharedTransitionScope) {
@@ -59,6 +68,8 @@ fun MediaCard(
             .width(cardWidth.dp)
             .scale(scale)
             .testTag("media_card_${item.tmdbId}")
+            .onFocusChanged { isFocused = it.isFocused }
+            .focusable()
             .clickable {
                 isPressed = true
                 onClick()
@@ -69,6 +80,11 @@ fun MediaCard(
                 .width(cardWidth.dp)
                 .height((cardWidth * 1.5).dp)
                 .clip(RoundedCornerShape(12.dp))
+                .then(
+                    if (isFocused) {
+                        Modifier.border(2.5.dp, CinemaRed, RoundedCornerShape(12.dp))
+                    } else Modifier
+                )
                 .shimmerEffect()
         ) {
             AsyncImage(

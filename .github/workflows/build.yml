@@ -90,7 +90,7 @@ jobs:
             echo "Renamed package to cc.youplex.movies.dev for side-by-side install"
           fi
 
-      - name: 📦 Build Local APK
+      - name: 📱 Build Mobile APK
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_ACCESS_TOKEN || secrets.TMDB_API_KEY }}
         run: |
@@ -101,13 +101,43 @@ jobs:
             gradle assembleDebug --no-daemon
           fi
           
-          # Locate generated APK and copy to root output
-          APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -f "$APK_PATH" ]; then
-            cp "$APK_PATH" ./youplex-latest.apk
-            echo "APK generated at ./youplex-latest.apk"
+          # Locate generated Mobile APK and copy
+          MOBILE_APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -f "$MOBILE_APK_PATH" ]; then
+            cp "$MOBILE_APK_PATH" ./youplex-mobile.apk
+            cp "$MOBILE_APK_PATH" ./youplex-latest.apk
+            echo "Mobile APK generated at ./youplex-mobile.apk & ./youplex-latest.apk"
           else
-            echo "Error: APK not found!" && exit 1
+            echo "Error: Mobile APK not found!" && exit 1
+          fi
+
+      - name: 📺 Build Android TV APK
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_ACCESS_TOKEN || secrets.TMDB_API_KEY }}
+        run: |
+          # Clean previous build artifacts
+          rm -rf app/build/outputs/apk
+          
+          # Configure TV Package Application ID
+          if [ "${{ github.ref_name }}" == "dev" ]; then
+            sed -i 's/applicationId = "[^"]*"/applicationId = "cc.youplex.movies.tv.dev"/g' app/build.gradle.kts
+          else
+            sed -i 's/applicationId = "[^"]*"/applicationId = "cc.youplex.movies.tv"/g' app/build.gradle.kts
+          fi
+          
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleDebug --no-daemon
+          else
+            gradle assembleDebug --no-daemon
+          fi
+          
+          # Locate generated TV APK and copy
+          TV_APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -f "$TV_APK_PATH" ]; then
+            cp "$TV_APK_PATH" ./youplex-tv.apk
+            echo "Android TV APK generated at ./youplex-tv.apk"
+          else
+            echo "Error: Android TV APK not found!" && exit 1
           fi
 
       - name: 🚢 Upload to Release
@@ -120,9 +150,16 @@ jobs:
             - **Branch:** ${{ github.ref_name }}
             - **Build Number:** ${{ github.run_number }}
             - **Commit:** ${{ github.sha }}
+
+            ### 📦 Included Downloads:
+            - 📱 **Mobile App:** `youplex-mobile.apk` (Phone & Tablet)
+            - 📺 **Android TV App:** `youplex-tv.apk` (Android TV & Leanback)
           prerelease: ${{ github.ref_name == 'dev' }}
           make_latest: ${{ github.ref_name == 'main' }}
-          files: ./youplex-latest.apk
+          files: |
+            ./youplex-latest.apk
+            ./youplex-mobile.apk
+            ./youplex-tv.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -178,8 +215,9 @@ jobs:
           message: |
             🚀 *Youplex v${{ github.run_number }} is out!*
 
-            📥 [Download Latest Release](https://github.com/${{ github.repository }}/releases/latest)
-            📦 [Download Direct APK](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-latest.apk)
+            📱 [Download Mobile APK](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-mobile.apk)
+            📺 [Download Android TV APK](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-tv.apk)
+            📥 [View All Releases](https://github.com/${{ github.repository }}/releases/latest)
 
       - name: 💬 Discord Notification
         if: github.ref_name != 'dev' && env.DISCORD_WEBHOOK != ''
@@ -194,7 +232,8 @@ jobs:
           description: |
             📢 **Youplex Update v${{ github.run_number }} is ready!**
 
-            📥 [Download Latest Release](https://github.com/${{ github.repository }}/releases/latest)
-            📦 [Download Direct APK](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-latest.apk)
-          content: "@everyone 📢 Youplex Update v${{ github.run_number }} is ready!"
+            📱 **Mobile Edition:** [Download youplex-mobile.apk](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-mobile.apk)
+            📺 **Android TV Edition:** [Download youplex-tv.apk](https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/youplex-tv.apk)
+            📥 **Release Page:** [View Release Notes](https://github.com/${{ github.repository }}/releases/latest)
+          content: "@everyone 📢 Youplex Update v${{ github.run_number }} (Mobile & TV) is ready!"
           color: 0xE91E63
