@@ -126,24 +126,7 @@ jobs:
           
           # Ensure google-services.json has a client matching the TV package name
           if [ -f "app/google-services.json" ]; then
-            python3 -c "
-import json
-try:
-    with open('app/google-services.json', 'r') as f:
-        data = json.load(f)
-    clients = data.get('client', [])
-    packages = [c.get('android_client_info', {}).get('package_name') for c in clients]
-    if '$TV_PACKAGE' not in packages and clients:
-        base_client = json.loads(json.dumps(clients[0]))
-        base_client['android_client_info']['package_name'] = '$TV_PACKAGE'
-        clients.append(base_client)
-        data['client'] = clients
-        with open('app/google-services.json', 'w') as f:
-            json.dump(data, f, indent=2)
-        print('Injected $TV_PACKAGE client into google-services.json')
-except Exception as e:
-    print(f'Error updating google-services.json: {e}')
-"
+            python3 -c "import json, sys; p='app/google-services.json'; d=json.load(open(p)); c=d.get('client',[]); (open(p,'w').write(json.dumps({**d, 'client': c + [{**c[0], 'android_client_info': {'package_name': sys.argv[1]}}]}, indent=2))) if (sys.argv[1] not in [x.get('android_client_info',{}).get('package_name') for x in c] and c) else None" "$TV_PACKAGE"
           fi
           
           if [ -f "./gradlew" ]; then
