@@ -114,11 +114,36 @@ jobs:
           # Clean previous build artifacts
           rm -rf app/build/outputs/apk
           
-          # Configure TV Package Application ID
+          # Target TV package name
           if [ "${{ github.ref_name }}" == "dev" ]; then
-            sed -i 's/applicationId = "[^"]*"/applicationId = "cc.youplex.movies.tv.dev"/g' app/build.gradle.kts
+            TV_PACKAGE="cc.youplex.movies.tv.dev"
           else
-            sed -i 's/applicationId = "[^"]*"/applicationId = "cc.youplex.movies.tv"/g' app/build.gradle.kts
+            TV_PACKAGE="cc.youplex.movies.tv"
+          fi
+          
+          # Configure TV Package Application ID
+          sed -i "s/applicationId = \"[^\"]*\"/applicationId = \"$TV_PACKAGE\"/g" app/build.gradle.kts
+          
+          # Ensure google-services.json has a client matching the TV package name
+          if [ -f "app/google-services.json" ]; then
+            python3 -c "
+import json
+try:
+    with open('app/google-services.json', 'r') as f:
+        data = json.load(f)
+    clients = data.get('client', [])
+    packages = [c.get('android_client_info', {}).get('package_name') for c in clients]
+    if '$TV_PACKAGE' not in packages and clients:
+        base_client = json.loads(json.dumps(clients[0]))
+        base_client['android_client_info']['package_name'] = '$TV_PACKAGE'
+        clients.append(base_client)
+        data['client'] = clients
+        with open('app/google-services.json', 'w') as f:
+            json.dump(data, f, indent=2)
+        print('Injected $TV_PACKAGE client into google-services.json')
+except Exception as e:
+    print(f'Error updating google-services.json: {e}')
+"
           fi
           
           if [ -f "./gradlew" ]; then
